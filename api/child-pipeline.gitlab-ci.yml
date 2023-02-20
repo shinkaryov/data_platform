@@ -1,0 +1,40 @@
+stages:
+  - build
+  - deploy
+
+build_api_image:
+  tags:
+    - build_image
+  stage: build
+  image: docker:20.10.16
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  services:
+    - docker:20.10.16-dind
+  before_script:
+    - echo "Hello"
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY 
+  script:
+    - docker build -t "$CI_API_DOCKER_REPOSITORY:$CI_COMMIT_SHORT_SHA" ./api --label "maintainer=$CI_COMMIT_AUTHOR"
+    - docker push "$CI_API_DOCKER_REPOSITORY:$CI_COMMIT_SHORT_SHA"
+  after_script:
+    - docker logout
+    - docker image rm "$CI_API_DOCKER_REPOSITORY:$CI_COMMIT_SHORT_SHA"
+
+
+deploy_image:
+  tags:
+    - build_image
+  stage: deploy
+  image: vfarcic/aws-helm-kubectl
+  script:
+    - printenv
+    - aws eks update-kubeconfig --region $AWS_REGION --name $K8S_CLUSTER_NAME
+    - kubectl config use-context $K8S_ARN
+    - helm list
+    - helm upgrade --install --debug --set dockerTag=$CI_COMMIT_SHORT_SHA api helm/api/
+
+  

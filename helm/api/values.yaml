@@ -1,0 +1,6 @@
+---
+imageRegistry: "docker.io/ispectre87/api"
+dockerTag: "latest"
+pullPolicy: "Always"
+env: "stage"
+replicas: 1

@@ -1,0 +1,7 @@
+apiVersion: v2
+name: "Airflow custom chart"
+version: "1.0.0"
+description: "Airflow Helm chart for kubernetes, for final project in PM Academy of group-7"
+appVersion: "0.0.9"
+maintainers:
+  - name: "group-7"

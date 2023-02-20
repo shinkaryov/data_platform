@@ -1,0 +1,157 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+  namespace: group-7
+  labels:
+    app: airflow
+    owner: group-7
+    env: {{ .Values.env }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: airflow
+  template:
+    metadata:
+      labels:
+        app: airflow
+    spec:
+
+      volumes:
+        - name: airflow-logs
+          emptyDir: {}
+
+      containers:
+      - name: airflow-webserver
+        image: {{ .Values.imageRegistry }}:{{ .Values.dockerTag }}
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "1500Mi"
+            cpu: "250m"
+          limits:
+            memory: "3000Mi"
+            cpu: "400m"
+        volumeMounts:
+          - name: airflow-logs
+            mountPath: /opt/airflow/logs
+        ports:
+        - containerPort: 8080
+        command: ["bash", "-c", "/opt/airflow/scripts/start_services.sh"]
+        envFrom:
+          - configMapRef:
+              name: {{ .Release.Name }}-container-envs
+          - secretRef:
+              name: airflow-secrets
+          - secretRef:
+              name: db-connection-secrets
+        env:
+          - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+            value: postgresql+psycopg2://$(username):$(password)@$(endpoint)/$(db_name)
+          - name: AIRFLOW__CELERY__RESULT_BACKEND
+            value: db+postgresql://$(username):$(password)@$(endpoint)/$(db_name)
+          - name: AIRFLOW_CONN_DEFAULT_DATABASE
+            value: postgres://$(username):$(password)@$(endpoint)/$(db_name)
+
+      - name: airflow-scheduler
+        image: {{ .Values.imageRegistry }}:{{ .Values.dockerTag }}
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "1500Mi"
+            cpu: "250m"
+          limits:
+            memory: "3000Mi"
+            cpu: "400m"
+        volumeMounts:
+          - name: airflow-logs
+            mountPath: /opt/airflow/logs
+        command: [ 'bash', '-c', 'airflow scheduler' ]
+        envFrom:
+          - configMapRef:
+              name: {{ .Release.Name }}-container-envs
+          - secretRef:
+              name: airflow-secrets
+          - secretRef:
+              name: db-connection-secrets
+        env:
+          - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+            value: postgresql+psycopg2://$(username):$(password)@$(endpoint)/$(db_name)
+          - name: AIRFLOW__CELERY__RESULT_BACKEND
+            value: db+postgresql://$(username):$(password)@$(endpoint)/$(db_name)
+          - name: AIRFLOW_CONN_DEFAULT_DATABASE
+            value: postgres://$(username):$(password)@$(endpoint)/$(db_name)
+
+      - name: airflow-worker
+        image: {{ .Values.imageRegistry }}:{{ .Values.dockerTag }}
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "1500Mi"
+            cpu: "250m"
+          limits:
+            memory: "3000Mi"
+            cpu: "400m"
+        volumeMounts:
+          - name: airflow-logs
+            mountPath: /opt/airflow/logs
+        command: [ 'bash', '-c', 'airflow celery worker' ]
+        envFrom:
+          - configMapRef:
+              name: {{ .Release.Name }}-container-envs
+          - secretRef:
+              name: airflow-secrets
+          - secretRef:
+              name: db-connection-secrets
+        env:
+          - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+            value: postgresql+psycopg2://$(username):$(password)@$(endpoint)/$(db_name)
+          - name: AIRFLOW__CELERY__RESULT_BACKEND
+            value: db+postgresql://$(username):$(password)@$(endpoint)/$(db_name)
+          - name: AIRFLOW_CONN_DEFAULT_DATABASE
+            value: postgres://$(username):$(password)@$(endpoint)/$(db_name)
+
+      - name: airflow-flower
+        image: {{ .Values.imageRegistry }}:{{ .Values.dockerTag }}
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "1500Mi"
+            cpu: "250m"
+          limits:
+            memory: "3000Mi"
+            cpu: "400m"
+        volumeMounts:
+          - name: airflow-logs
+            mountPath: /opt/airflow/logs
+        ports:
+          - containerPort: 5555
+        command: [ 'bash', '-c', 'airflow celery flower' ]
+        envFrom:
+          - configMapRef:
+              name: {{ .Release.Name }}-container-envs
+          - secretRef:
+              name: airflow-secrets
+          - secretRef:
+              name: db-connection-secrets
+        env:
+          - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+            value: postgresql+psycopg2://$(username):$(password)@$(endpoint)/$(db_name)
+          - name: AIRFLOW__CELERY__RESULT_BACKEND
+            value: db+postgresql://$(username):$(password)@$(endpoint)/$(db_name)
+          - name: AIRFLOW_CONN_DEFAULT_DATABASE
+            value: postgres://$(username):$(password)@$(endpoint)/$(db_name)
+
+      - name: redis
+        image: redis
+        ports:
+          - containerPort: 6379
+        resources:
+          requests:
+            memory: "750Mi"
+            cpu: "150m"
+          limits:
+            memory: "1500Mi"
+            cpu: "300m"

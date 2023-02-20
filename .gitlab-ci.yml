@@ -1,0 +1,30 @@
+airflow:
+  stage: build
+  trigger:
+    include: airflow/child-pipeline.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'stage'
+      changes:
+        - ${CI_JOB_NAME}/**/*
+        - ${CI_JOB_NAME}/*
+  allow_failure: false
+
+api:
+  stage: build
+  trigger:
+    include: api/child-pipeline.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'stage'
+      changes:
+        - ${CI_JOB_NAME}/**/*
+        - ${CI_JOB_NAME}/*
+  allow_failure: false
+
+terraform:
+  stage: build
+  trigger:
+    include: terraform/child-pipeline.gitlab-ci.yml
+    strategy: depend
+  allow_failure: false

@@ -1,0 +1,51 @@
+stages:
+  - validate
+  - plan
+  - apply
+
+image:
+  name: zenika/terraform-aws-cli:latest
+
+before_script:
+  - rm -rf .terraform
+  - terraform --version
+  - cd terraform/postgresql
+  - terraform init -reconfigure -backend-config envs/dev.conf
+  - cd ../k8s
+  - terraform init -reconfigure -backend-config envs/dev.conf
+  - cd ../..
+
+validate:
+  tags:
+    - build_image
+  stage: validate
+  script:
+    - terraform validate
+
+plan:
+  tags:
+    - build_image
+  stage: plan
+  script:
+    - cd terraform/postgresql
+    - terraform plan -var-file envs/dev.tfvars
+    - cd ../k8s
+    - terraform plan -var-file envs/dev.tfvars
+    - cd ../..
+  dependencies:
+    - validate
+
+apply:
+  tags:
+    - build_image
+  stage: apply
+  script:
+    - cd terraform/postgresql
+    - terraform apply -var-file envs/dev.tfvars -auto-approve
+    - cd ../k8s
+    - terraform apply -var-file envs/dev.tfvars -auto-approve
+    - cd ../..
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'stage'
+  dependencies:
+    - plan

@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-container-envs
+  labels:
+    owner: group-7
+data:
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+  AIRFLOW__CORE__EXECUTOR: 'CeleryExecutor'
+  AIRFLOW__CORE__FERNET_KEY: ''
+  AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+  AIRFLOW__CELERY__BROKER_URL: 'redis://:@localhost:6379/0'
+  AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
