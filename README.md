@@ -2,6 +2,7 @@
 ### Data Engineering
 ### Final_project (group-7)
 There is my final project as PM Data Engineering student. We have done it in a group of 3 people. I was responsible for creating API for existing database, writing helm chart and CI/CD pipeline for its building and deploying into K8S
+
 P.S. It is better to fork this project into Gitlab
 ##### Project description
 This project implement complex task of creating infrastructure and software development on existing Kubernetes Cluster.
@@ -13,7 +14,34 @@ Project repository has all needed for:
 - All other needed components, services, permissions, roles, etc. for grant all components work together
 
 ##### Creating infrastructure
-...
+
+Terraform code is separated in two directories: k8s and postgresql.
+
+In postgresql implemented rds instance with random generated password for login. Also imported existed vpc and created subnet_grop and security_group for rds.
+All credentials for rds instance(username, password, endpoint, ds_names) saved in SSM Parameter Store.
+
+To check is all this things is up to data move to `terraform/postgresql` directory and run next commands:
+
+`terraform init -backend-config envs/dev.conf` where -backend-config declare a file with terraform configuration.
+
+`terraform plan -var-file envs/dev.tfvars` where -var-file declare a file with no-static variables for terraform resources.
+
+If there are any differences with infrastructure run this command:
+`terraform apply -var-file envs/dev.tfvars`
+
+
+
+In k8s implemented secrets for eks cluster via kubernetes provider that declared using imported eks parameters.
+Also k8s irsa role for gitlab rummer was created via terraform. 
+To check is all this things is up to data move to `terraform/k8s` directory and run next commands:
+
+`terraform init -backend-config envs/dev.conf` where -backend-config declare a file with terraform configuration.
+
+`terraform plan -var-file envs/dev.tfvars` where -var-file declare a file with no-static variables for terraform resources.
+
+If there are any differences with infrastructure run this command:
+`terraform apply -var-file envs/dev.tfvars`
+
 ##### Deploying gitlab-runner
 After this step you'll get working gitlab-runner in Kubernetes Cluster registered for jobs for this(or another) project.
 For deploying gitlab-runner use official gitlab-runner chart, run
@@ -61,31 +89,3 @@ API works with RDS Postgres database named sales, which consist of 8 tables norm
 order_status_stats from date_from to date_to 
 
 P.S. You need to change x with something from set {'sale', 'order_status', 'status_name'}
-
-##### Terraform state
-Terraform code is separated in two directories: k8s and postgresql.
-
-In postgresql implemented rds instance with random generated password for login. Also imported existed vpc and created subnet_grop and security_group for rds.
-All credentials for rds instance(username, password, endpoint, ds_names) saved in SSM Parameter Store.
-
-To check is all this things is up to data move to `terraform/postgresql` directory and run next commands:
-
-`terraform init -backend-config envs/dev.conf` where -backend-config declare a file with terraform configuration.
-
-`terraform plan -var-file envs/dev.tfvars` where -var-file declare a file with no-static variables for terraform resources.
-
-If there are any differences with infrastructure run this command:
-`terraform apply -var-file envs/dev.tfvars`
-
-
-
-In k8s implemented secrets for eks cluster via kubernetes provider that declared using imported eks parameters.
-Also k8s irsa role for gitlab rummer was created via terraform. 
-To check is all this things is up to data move to `terraform/k8s` directory and run next commands:
-
-`terraform init -backend-config envs/dev.conf` where -backend-config declare a file with terraform configuration.
-
-`terraform plan -var-file envs/dev.tfvars` where -var-file declare a file with no-static variables for terraform resources.
-
-If there are any differences with infrastructure run this command:
-`terraform apply -var-file envs/dev.tfvars`
