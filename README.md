@@ -1,8 +1,3 @@
-### Parimatch Tech Academy
-### Data Engineering
-### Final_project (group-7)
-There is my final project as PM Data Engineering student. We have done it in a group of 3 people. I was responsible for creating API for existing database, writing helm chart and CI/CD pipeline for its building and deploying into K8S
-
 P.S. It is better to fork this project into Gitlab
 ##### Project description
 This project implement complex task of creating infrastructure and software development on existing Kubernetes Cluster.
